@@ -1,0 +1,16 @@
+venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+node_modules/
+dist/
+.env
+.DS_Store
+*.pyc
+*.pkl
+/.vscode/
+coverage/
+build/
+npm-debug.log*
+package-lock.json
