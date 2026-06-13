@@ -30,6 +30,9 @@ FEATURE_COLUMNS = [
     "venue_suitability_team1",
     "venue_suitability_team2",
     "batting_strength_diff",
+    "venue_chase_bias",
+    "team1_star_players",
+    "team2_star_players",
 ]
 
 
@@ -66,10 +69,10 @@ def train_and_evaluate(df: pd.DataFrame) -> None:
 
     # Tuned XGBoost hyperparameters
     model = XGBClassifier(
-        n_estimators=200,
-        max_depth=5,
-        learning_rate=0.1,
-        subsample=0.8,
+        n_estimators=80,
+        max_depth=3,
+        learning_rate=0.15,
+        subsample=0.6,
         colsample_bytree=0.8,
         use_label_encoder=False,
         eval_metric="logloss",

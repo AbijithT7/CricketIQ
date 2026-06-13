@@ -34,6 +34,9 @@ class MatchPredictionRequest(BaseModel):
     venue_suitability_team1: float
     venue_suitability_team2: float
     batting_strength_diff: float
+    venue_chase_bias: float
+    team1_star_players: float
+    team2_star_players: float
     toss_decision: Optional[str] = "bat"
 
 
@@ -197,6 +200,9 @@ def get_match_features(team1: str, team2: str, venue: str):
             "venue_suitability_team1": float(row.get("venue_suitability_team1", 0.0)),
             "venue_suitability_team2": float(row.get("venue_suitability_team2", 0.0)),
             "batting_strength_diff": float(row.get("batting_strength_diff", 0.0)),
+            "venue_chase_bias": float(row.get("venue_chase_bias", 0.5)),
+            "team1_star_players": float(row.get("team1_star_players", 0.0)),
+            "team2_star_players": float(row.get("team2_star_players", 0.0)),
         }
 
     # Case 1: Exact matchup
@@ -215,6 +221,9 @@ def get_match_features(team1: str, team2: str, venue: str):
             "venue_suitability_team1": float(r["venue_suitability_team2"]),
             "venue_suitability_team2": float(r["venue_suitability_team1"]),
             "batting_strength_diff": -float(r["batting_strength_diff"]),
+            "venue_chase_bias": float(r["venue_chase_bias"]),
+            "team1_star_players": float(r["team2_star_players"]),
+            "team2_star_players": float(r["team1_star_players"]),
         }
         return enrich_match_features(swapped_vals, team1, team2, venue)
 
@@ -252,6 +261,17 @@ def get_match_features(team1: str, team2: str, venue: str):
         val = float(r.get("batting_strength_diff", 0.0))
         bsd_list.append(val if str(r["team1"]).lower() == team1.lower() else -val)
 
+    venue_chase_vals = df.loc[venue_mask, "venue_chase_bias"] if venue_mask.any() else pd.Series(dtype=float)
+    venue_chase_avg = float(venue_chase_vals.mean()) if not venue_chase_vals.empty else 0.5
+
+    def get_avg_star_players(team_name):
+        m1 = team1_col.str.lower() == team_name.lower()
+        m2 = team2_col.str.lower() == team_name.lower()
+        v1 = df.loc[m1, "team1_star_players"] if m1.any() else pd.Series(dtype=float)
+        v2 = df.loc[m2, "team2_star_players"] if m2.any() else pd.Series(dtype=float)
+        all_v = pd.concat([v1, v2])
+        return float(all_v.mean()) if not all_v.empty else 0.0
+
     fallback_vals = {
         "team1_win_ratio_last_5": get_avg_win_ratio(team1),
         "team2_win_ratio_last_5": get_avg_win_ratio(team2),
@@ -260,6 +280,9 @@ def get_match_features(team1: str, team2: str, venue: str):
         "venue_suitability_team1": float(pd.Series(vs_t1_vals).mean()) if vs_t1_vals else 0.5,
         "venue_suitability_team2": float(pd.Series(vs_t2_vals).mean()) if vs_t2_vals else 0.5,
         "batting_strength_diff": float(pd.Series(bsd_list).mean()) if bsd_list else 0.0,
+        "venue_chase_bias": venue_chase_avg,
+        "team1_star_players": get_avg_star_players(team1),
+        "team2_star_players": get_avg_star_players(team2),
     }
     return enrich_match_features(fallback_vals, team1, team2, venue)
 
@@ -272,7 +295,8 @@ def predict_match(payload: MatchPredictionRequest):
     feature_order = [
         "team1_win_ratio_last_5", "team2_win_ratio_last_5", "venue_avg_first_innings",
         "is_toss_winner_team1", "team1_head_to_head_win_ratio", "venue_suitability_team1",
-        "venue_suitability_team2", "batting_strength_diff"
+        "venue_suitability_team2", "batting_strength_diff",
+        "venue_chase_bias", "team1_star_players", "team2_star_players"
     ]
     
     X = pd.DataFrame([payload.dict()])[feature_order]
