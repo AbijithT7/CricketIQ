@@ -215,7 +215,51 @@ export default function MatchPredictor() {
         <div className="bg-slate-800/30 p-6 rounded-2xl border border-slate-700 h-full">
           <h3 className="text-xl font-black mb-6 text-white tracking-tighter">PREDICTION ANALYSIS</h3>
           
-          {result ? (
+          {loading ? (
+            <div className="space-y-8 animate-pulse">
+              {/* Win Probabilities Skeleton */}
+              <div className="space-y-6 bg-slate-900/50 p-6 rounded-2xl border border-slate-700/50">
+                <div className="flex justify-between items-end">
+                  <div className="space-y-2 w-1/3">
+                    <div className="h-3 bg-slate-800 rounded w-1/2"></div>
+                    <div className="h-8 bg-slate-800 rounded w-3/4"></div>
+                  </div>
+                  <div className="space-y-2 w-1/3 text-right">
+                    <div className="h-3 bg-slate-800 rounded w-1/2 ml-auto"></div>
+                    <div className="h-8 bg-slate-800 rounded w-3/4 ml-auto"></div>
+                  </div>
+                </div>
+                <div className="w-full h-4 bg-slate-800 rounded-full"></div>
+              </div>
+
+              {/* Insights Card Grid Skeleton */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-slate-900/50 border border-slate-700/50 p-6 rounded-2xl space-y-4">
+                  <div className="h-4 bg-slate-800 rounded w-1/3"></div>
+                  <div className="h-6 bg-slate-800 rounded w-2/3"></div>
+                  <div className="h-3 bg-slate-800 rounded w-full"></div>
+                </div>
+                <div className="bg-slate-900/50 border border-slate-700/50 p-6 rounded-2xl space-y-4">
+                  <div className="h-4 bg-slate-800 rounded w-1/3"></div>
+                  <div className="h-6 bg-slate-800 rounded w-2/3"></div>
+                  <div className="h-3 bg-slate-800 rounded w-full"></div>
+                </div>
+              </div>
+
+              {/* Metrics Grid Skeleton */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="bg-slate-900/50 border border-slate-700/50 p-4 rounded-xl flex items-center space-x-4">
+                    <div className="bg-slate-800 w-10 h-10 rounded-lg"></div>
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3 bg-slate-800 rounded w-1/4"></div>
+                      <div className="h-5 bg-slate-800 rounded w-3/4"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : result ? (
             result.error ? (
               <div className="bg-red-500/10 border border-red-500/50 p-4 rounded-xl text-red-400">
                 {result.error}
@@ -244,6 +288,120 @@ export default function MatchPredictor() {
                         <div className="w-full h-4 bg-slate-800 rounded-full overflow-hidden flex border border-slate-700">
                           <div className="h-full bg-neon transition-all duration-1000 ease-out" style={{ width: `${pTeam1 * 100}%` }} />
                           <div className="h-full bg-rose-500 transition-all duration-1000 ease-out" style={{ width: `${pTeam2 * 100}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* Sleek Insights Section */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Venue Intelligence Card */}
+                  {(() => {
+                    const chaseBias = result.features.venue_chase_bias ?? 0.5;
+                    const chasePercent = Math.round(chaseBias * 100);
+                    const defendPercent = 100 - chasePercent;
+                    
+                    return (
+                      <div className="bg-slate-900/50 border border-slate-700 p-6 rounded-2xl flex flex-col justify-between space-y-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="bg-slate-800 p-2 rounded-lg text-neon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                          </div>
+                          <h4 className="text-sm font-bold text-white uppercase tracking-wider">Venue Intelligence</h4>
+                        </div>
+                        
+                        <div className="space-y-3">
+                          <p className="text-xs text-slate-300">
+                            {chasePercent >= 50 ? (
+                              <span>
+                                <strong className="text-neon">{chasePercent}%</strong> of matches here are won by the <strong className="text-white">chasing team</strong> (Batting 2nd).
+                              </span>
+                            ) : (
+                              <span>
+                                <strong className="text-rose-400">{defendPercent}%</strong> of matches here are won by the <strong className="text-white">defending team</strong> (Batting 1st).
+                              </span>
+                            )}
+                          </p>
+                          
+                          {/* Visual split gauge bar */}
+                          <div className="relative pt-1">
+                            <div className="flex mb-2 items-center justify-between text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                              <span>Batting 1st ({defendPercent}%)</span>
+                              <span>Batting 2nd ({chasePercent}%)</span>
+                            </div>
+                            <div className="overflow-hidden h-3 text-xs flex rounded-full bg-slate-800 border border-slate-700/50">
+                              <div style={{ width: `${defendPercent}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-slate-700 transition-all duration-1000"></div>
+                              <div style={{ width: `${chasePercent}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-neon transition-all duration-1000"></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Star Player Matchup Card */}
+                  {(() => {
+                    const t1Stars = Math.round(result.features.team1_star_players ?? 0);
+                    const t2Stars = Math.round(result.features.team2_star_players ?? 0);
+                    const totalStars = t1Stars + t2Stars;
+                    const t1Ratio = totalStars > 0 ? (t1Stars / totalStars) * 100 : 50;
+                    const t2Ratio = totalStars > 0 ? (t2Stars / totalStars) * 100 : 50;
+                    const homeLabel = getTeamLabel(home);
+                    const awayLabel = getTeamLabel(away);
+                    
+                    const renderStars = (count) => {
+                      const maxStars = 5;
+                      return (
+                        <div className="flex space-x-1 justify-center my-1">
+                          {Array.from({ length: maxStars }).map((_, i) => (
+                            <svg 
+                              key={i} 
+                              className={`w-4 h-4 ${i < count ? "text-amber-400 fill-amber-400 filter drop-shadow-[0_0_4px_rgba(251,191,36,0.5)]" : "text-slate-700"}`} 
+                              xmlns="http://www.w3.org/2000/svg" 
+                              viewBox="0 0 24 24" 
+                              fill="none" 
+                              stroke="currentColor" 
+                              strokeWidth="2" 
+                              strokeLinecap="round" 
+                              strokeLinejoin="round"
+                            >
+                              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                            </svg>
+                          ))}
+                        </div>
+                      );
+                    };
+
+                    return (
+                      <div className="bg-slate-900/50 border border-slate-700 p-6 rounded-2xl flex flex-col justify-between space-y-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="bg-slate-800 p-2 rounded-lg text-neon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                          </div>
+                          <h4 className="text-sm font-bold text-white uppercase tracking-wider">Star Lineup Power</h4>
+                        </div>
+                        
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center text-center">
+                            <div className="flex-1">
+                              <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">{homeLabel}</p>
+                              <p className="text-2xl font-black text-white">{t1Stars}</p>
+                              {renderStars(t1Stars)}
+                            </div>
+                            <div className="px-4 text-xs font-black text-slate-500 uppercase">VS</div>
+                            <div className="flex-1">
+                              <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">{awayLabel}</p>
+                              <p className="text-2xl font-black text-white">{t2Stars}</p>
+                              {renderStars(t2Stars)}
+                            </div>
+                          </div>
+
+                          {/* Tug-of-war split bar */}
+                          <div className="overflow-hidden h-2 text-xs flex rounded-full bg-slate-800 border border-slate-700/50 mt-2">
+                            <div style={{ width: `${t1Ratio}%` }} className="shadow-none bg-neon transition-all duration-1000"></div>
+                            <div style={{ width: `${t2Ratio}%` }} className="shadow-none bg-rose-500 transition-all duration-1000"></div>
+                          </div>
                         </div>
                       </div>
                     );
